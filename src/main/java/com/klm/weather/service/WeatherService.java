@@ -7,8 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.klm.weather.exception.ResourceNotFoundException;
 
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
+
 @Service
 public class WeatherService {
+    private static final String WEATHER_NOT_FOUND = "Weather with ID %d not found";
     private final WeatherRepository weatherRepository;
 
     @Autowired
@@ -32,6 +37,41 @@ public class WeatherService {
 
     public Weather getWeatherById(Integer id) {
         return weatherRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Weather with ID " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(WEATHER_NOT_FOUND, id)));
+    }
+
+    public List<Weather> getAllWeather(String date, String city, String sort) {
+        List<Weather> records = weatherRepository.findAll();
+
+        //get records with same date
+        if (date != null && !date.isBlank()) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+            records = records
+                    .stream()
+                    .filter(weather -> sdf.format(weather.getDate()).equals(date))
+                    .toList();
+        }
+
+        //get records with same city
+        if (city != null && !city.isBlank()) {
+            Set<String> citySet = Arrays.stream(city.split(","))
+                    .map(String::toLowerCase)
+                    .collect(Collectors.toSet());
+
+            records = records.stream()
+                    .filter(weather -> citySet.contains(weather.getCity().toLowerCase()))
+                    .toList();
+        }
+
+        if (sort != null) {
+            if ("date".equals(sort)) {
+                records.sort(Comparator.comparing(Weather::getDate).thenComparing(Weather::getId));
+            } else if ("-date".equals(sort)) {
+                records.sort(Comparator.comparing(Weather::getDate).reversed().thenComparing(Weather::getId));
+            }
+        }
+
+        return records;
     }
 }

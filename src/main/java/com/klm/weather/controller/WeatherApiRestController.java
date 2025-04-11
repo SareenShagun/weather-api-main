@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.swing.text.html.Option;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -31,5 +31,13 @@ public class WeatherApiRestController {
     public ResponseEntity<Weather> getWeatherById(@PathVariable Integer id) {
         Weather weather = weatherService.getWeatherById(id);
         return ResponseEntity.ok(weather);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Weather>> getWeather(@RequestParam(required = false) String date,
+                                                    @RequestParam(required = false) String city,
+                                                    @RequestParam(required = false) String sort) {
+        List<Weather> records = weatherService.getAllWeather(date, city, sort);
+        return ResponseEntity.ok(records);
     }
 }
