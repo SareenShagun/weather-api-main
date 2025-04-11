@@ -11,8 +11,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -68,5 +71,28 @@ public class WeatherServiceTest {
         assertEquals(weather.getId(), createdWeather.getId());
         assertEquals(weather.getState(), createdWeather.getState());
         verify(weatherRepository, times(1)).save(any(Weather.class));
+    }
+
+    @Test
+    void shouldReturnWeatherDetailsById() {
+        when(weatherRepository.findById(1)).thenReturn(Optional.ofNullable(weather));
+
+        Weather responseWeather = weatherService.getWeatherById(1);
+
+        assertNotNull(responseWeather);
+        assertEquals(weather.getId(), responseWeather.getId());
+        assertEquals(weather.getCity(), responseWeather.getCity());
+        verify(weatherRepository, times(1)).findById(1);
+    }
+
+    @Test
+    void shouldReturnWeatherDetailsByDate() {
+
+        when(weatherRepository.findAll()).thenReturn(List.of(weather));
+        String targetDate = new SimpleDateFormat("yyyy-MM-dd").format(weather.getDate());
+
+        List<Weather> response = weatherService.getAllWeather(targetDate, null, null);
+        assertEquals(1, response.size());
+        assertEquals(weather.getCity(), response.get(0).getCity());
     }
 }
